@@ -1,0 +1,957 @@
+// Ce bloc définit le générateur de client Prisma, qui est utilisé pour interagir avec la base de données.
+// Le fournisseur "prisma-client-js" est le client JavaScript/TypeScript standard.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Ce bloc configure la connexion à la base de données.
+// Le fournisseur "mysql" est utilisé, et l'URL de connexion est récupérée depuis une variable d'environnement.
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ENUMS (EN FRANÇAIS)
+
+// Définit les rôles possibles pour un utilisateur au sein d'une boutique.
+enum RoleNom {
+  PROPRIETAIRE // Propriétaire de la boutique, avec tous les droits.
+  GERANT // Gérant de la boutique, avec des droits de gestion.
+  VENDEUR // Vendeur, avec des droits limités aux opérations de vente.
+}
+
+// Définit les types d'entreprises que peut représenter une boutique.
+enum TypeEntreprise {
+  PHARMACIE // Pharmacie.
+  QUINCAILLERIE // Quincaillerie.
+  BOUCHERIE // Boucherie.
+  CHARCUTERIE // Charcuterie.
+  BOULANGERIE // Boulangerie.
+  BOUTIQUE_ALIMENTAIRE // Boutique alimentaire.
+  BOUTIQUE_HABILLEMENT // Boutique d'habillement.
+  SUPERMARCHE // Supermarché.
+  AUTRE // Autre type d'entreprise non listé.
+}
+
+/// Représente les différents types d'opérations de stock.
+/// - ENTREE: Ajout de produits au stock.
+/// - SORTIE: Retrait de produits du stock (ex: vente, perte).
+enum TypeStock {
+  ENTREE // Ajout de produits au stock (ex: réception de marchandises).
+  SORTIE // Retrait de produits du stock (ex: vente, perte, consommation interne).
+  AJUSTEMENT // Correction de la quantité de stock (ex: inventaire).
+}
+
+/// Représente le statut d'une dette client.
+/// - EN_COURS: La dette est active et n'a pas encore été entièrement payée.
+/// - PARTIELLE: Une partie de la dette a été payée, mais il reste un solde.
+// - PAYEE: La dette a été entièrement réglée.
+enum StatutDette {
+  EN_COURS // La dette est active et n'a pas encore été entièrement payée.
+  PARTIELLE // Une partie de la dette a été payée, mais il reste un solde.
+  PAYEE // La dette a été entièrement réglée.
+}
+
+/// Représente le statut d'une vente.
+/// - PAYEE: La vente a été entièrement réglée.
+/// - PARTIELLE: Une partie de la vente a été réglée, le reste est en dette.
+// - DETTE: La vente a généré une dette complète (aucun paiement initial).
+enum StatutVente {
+  PAYEE // La vente a été entièrement réglée.
+  PARTIELLE // Une partie de la vente a été réglée, le reste est en dette.
+  DETTE // La vente a généré une dette complète (aucun paiement initial).
+  ANNULEE
+  REMBOURSEE_PARTIELLEMENT
+  REMBOURSEE
+}
+
+enum StatutAchat {
+  PAYE
+  PARTIEL
+  DETTE
+}
+
+enum StatutSessionCaisse {
+  OUVERTE
+  FERMEE
+  VALIDEE
+  REJETEE
+}
+
+enum TypeMouvementCaisse {
+  ENTREE
+  SORTIE
+}
+
+/// Représente les types d'actions enregistrées dans le journal système.
+/// Utile pour l'audit et le suivi des opérations importantes.
+/// - CREATION_PRODUIT: Création d'un nouveau produit.
+/// - MODIFICATION_PRODUIT: Modification des détails d'un produit existant.
+/// - SUPPRESSION_PRODUIT: Suppression d'un produit.
+// - VENTE_CREATION: Enregistrement d'une nouvelle vente.
+// - MISE_A_JOUR_STOCK: Mise à jour du stock d'un produit.
+// - PAIEMENT_DETTE: Enregistrement d'un paiement pour une dette.
+enum TypeAction {
+  CREATION_PRODUIT // Création d'un nouveau produit.
+  MODIFICATION_PRODUIT // Modification des détails d'un produit existant.
+  SUPPRESSION_PRODUIT // Suppression d'un produit.
+  VENTE_CREATION // Enregistrement d'une nouvelle vente.
+  MISE_A_JOUR_STOCK // Mise à jour du stock d'un produit.
+  PAIEMENT_DETTE // Enregistrement d'un paiement pour une dette.
+  RAVITAILLEMENT
+  CLOTURE_JOURNEE
+  ABONNEMENT_CREATION
+  DEPENSE_CREATION
+  APPORT_CREATION
+  APPORT_RETRAIT
+  ACHAT_CREATION
+  INVENTAIRE_CREATION
+  VENTE_ANNULATION
+  VENTE_REMBOURSEMENT
+  CAISSE_OUVERTURE
+  CAISSE_FERMETURE
+}
+
+/// Représente les différentes méthodes de paiement acceptées.
+/// - ESPECES: Paiement en argent liquide.
+/// - MOBILE_MONEY: Paiement via un service de monnaie mobile.
+enum MethodePaiement {
+  ESPECES // Paiement en argent liquide.
+  MOBILE_MONEY // Paiement via un service de monnaie mobile.
+  BANQUE // Paiement via virement bancaire ou carte.
+}
+
+enum PlanAbonnement {
+  ESSAI
+  MENSUEL
+  TRIMESTRIEL
+  SEMESTRIEL
+  ANNUEL
+  PERSONNALISE
+}
+
+enum CycleFacturation {
+  UNIQUE
+  MENSUEL
+  TRIMESTRIEL
+  SEMESTRIEL
+  ANNUEL
+}
+
+enum StatutAbonnement {
+  EN_ATTENTE
+  ACTIF
+  EXPIRE
+  SUSPENDU
+  ANNULE
+}
+
+enum StatutClotureJournee {
+  CLOTUREE
+  VALIDEE
+  ANNULEE
+}
+
+enum CategorieDepense {
+  LOYER
+  SALAIRE
+  TRANSPORT
+  FOURNITURE
+  ELECTRICITE
+  INTERNET
+  TAXE
+  MAINTENANCE
+  AUTRE
+}
+
+enum StatutApport {
+  EN_COURS
+  PARTIELLEMENT_RECUPERE
+  RECUPERE
+}
+
+// Définit les unités de mesure possibles pour un produit.
+enum UniteMesure {
+  // Unités de masse
+  Kilogramme // Kilogramme
+  Gramme // Gramme
+  Milligramme // Milligramme
+  Livre // Livre (Pound)
+  Once // Once (Ounce)
+
+  // Unités de volume
+  Litre // Litre
+  Millilitre // Millilitre
+  Gallon // Gallon
+
+  // Unités de quantité/pièces
+  Pieces // Pièces (Units)
+  Boite // Boîte (Box)
+  Paquet // Paquet (Pack)
+  Rouleau // Rouleau (Roll)
+
+  // Autre
+  Autre // Autre unité de mesure
+}
+
+// User & AUTH
+
+// Modèle représentant un utilisateur du système.
+model User {
+  userId         String  @id @default(cuid())
+  nom            String
+  nomUtilisateur String? @unique
+  telephone      String? @unique
+  adresse        String?
+  motDePasse     String
+  statut         Boolean @default(true)
+  doitChangerPin Boolean @default(false)
+  authVersion    Int     @default(0)
+
+  // Relations:
+  UserRoles          UserRole[] // Rôles de l'utilisateur dans différentes boutiques.
+  Sales              Vente[] // Ventes effectuées par cet utilisateur.
+  OwnedBoutiques     Boutique[]           @relation("BoutiquesOwned") // Boutiques dont cet utilisateur est propriétaire.
+  JournalActions     JournalAction[] // Actions enregistrées par cet utilisateur.
+  AbonnementsCrees   Abonnement[]         @relation("AbonnementsCrees")
+  Ravitaillements    Ravitaillement[]
+  CloturesJournee    ClotureJournee[]     @relation("CloturesJournee")
+  ValidationsCloture ClotureJournee[]     @relation("ValidationsCloture")
+  Depenses           Depense[]
+  Apports            Apport[]
+  RetraitsApport     RetraitApport[]
+  Achats             Achat[]
+  Inventaires        Inventaire[]
+  Remboursements     RemboursementVente[]
+  SessionsOuvertes   SessionCaisse[]      @relation("SessionsCaisseOuvertes")
+  SessionsFermees    SessionCaisse[]      @relation("SessionsCaisseFermees")
+  SessionsValidees   SessionCaisse[]      @relation("SessionsCaisseValidees")
+  MouvementsCaisse   MouvementCaisse[]
+
+  createdAt DateTime @default(now()) // Date de création de l'utilisateur.
+  updatedAt DateTime @updatedAt // Date de la dernière mise à jour de l'utilisateur.
+
+  // Index pour optimiser la recherche par nom d'utilisateur.
+  @@index([nom])
+  @@index([nomUtilisateur])
+}
+
+// Modèle représentant un rôle prédéfini dans le système.
+model Role {
+  roleId String  @id @default(cuid())
+  nom    RoleNom @unique
+
+  // Relations:
+  UserRoles UserRole[] // Utilisateurs associés à ce rôle.
+
+  // Index pour optimiser la recherche par nom de rôle.
+  @@index([nom])
+}
+
+// Modèle de jointure pour associer un utilisateur à un rôle dans une boutique spécifique.
+model UserRole {
+  userRoleId String @id @default(cuid())
+
+  userId     String
+  roleId     String
+  boutiqueId String
+
+  User      User     @relation(fields: [userId], references: [userId], onDelete: Cascade) // L'utilisateur associé.
+  Roles     Role     @relation(fields: [roleId], references: [roleId], onDelete: Cascade) // Le rôle associé.
+  Boutiques Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade) // La boutique associée.
+
+  createdAt DateTime @default(now()) // Date de création de l'association.
+
+  @@unique([userId, boutiqueId])
+}
+
+// BOUTIQUE
+
+model Boutique {
+  boutiqueId           String         @id @default(cuid())
+  nom                  String
+  adresse              String?
+  devise               String         @default("USD")
+  deviseSecondaire     String?
+  tauxDeviseSecondaire Decimal?       @db.Decimal(15, 6)
+  RCCM                 String?        @unique
+  typeEntreprise       TypeEntreprise
+
+  proprietaireId String
+  proprietaire   User   @relation(fields: [proprietaireId], references: [userId], name: "BoutiquesOwned")
+
+  produits            Produit[]
+  clients             Client[]
+  ventes              Vente[]
+  categories          Categorie[]
+  dettes              Dette[]
+  UserRoles           UserRole[]
+  abonnements         Abonnement[]
+  ravitaillements     Ravitaillement[]
+  cloturesJournee     ClotureJournee[]
+  depenses            Depense[]
+  apports             Apport[]
+  retraitsApport      RetraitApport[]
+  fournisseurs        Fournisseur[]
+  achats              Achat[]
+  dettesFournisseurs  DetteFournisseur[]
+  inventaires         Inventaire[]
+  remboursementsVente RemboursementVente[]
+  caisses             Caisse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// PRODUITS
+
+model Produit {
+  produitId   String  @id @default(cuid())
+  nom         String
+  description String?
+  photo       String? // URL ou chemin d'accès à la photo du produit
+
+  prixAchat      Decimal   @db.Decimal(15, 2)
+  prixVente      Decimal   @db.Decimal(15, 2)
+  stockActuel    Decimal   @default(0) @db.Decimal(15, 3) // Changé en Decimal pour gérer les poids/volumes
+  dateExpiration DateTime? // Crucial pour Pharmacie et Alimentaire
+
+  codeQR String @unique
+
+  boutiqueId  String
+  uniteMesure UniteMesure @default(Pieces) // Unité de mesure du produit
+  boutique    Boutique    @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  categorieId         String?
+  categorie           Categorie?                @relation(fields: [categorieId], references: [categorieId], onDelete: SetNull)
+  Stocks              Stock[]
+  ravitaillements     Ravitaillement[]
+  lignesVente         LigneVente[]
+  lignesAchat         LigneAchat[]
+  lignesInventaire    LigneInventaire[]
+  lignesRemboursement LigneRemboursementVente[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@unique([nom, boutiqueId])
+  @@index([nom])
+  @@index([prixAchat])
+  @@index([prixVente])
+  @@index([boutiqueId])
+}
+
+model Categorie {
+  categorieId String @id @default(cuid())
+  nom         String
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  produits Produit[]
+
+  @@unique([nom, boutiqueId])
+  @@index([nom])
+}
+
+// STOCK (RESTE STOCK comme demandé)
+
+// Modèle enregistrant les mouvements de stock pour un produit.
+model Stock {
+  stockId String @id @default(cuid())
+
+  produitId String
+  Products  Produit @relation(fields: [produitId], references: [produitId], onDelete: Cascade)
+
+  // Attributs:
+  type     TypeStock // Type de mouvement (ENTREE, SORTIE, AJUSTEMENT).
+  quantite Decimal   @db.Decimal(15, 3) // Decimal pour permettre les entrées/sorties au poids
+  raison   String? // Raison facultative du mouvement de stock.
+
+  createdAt      DateTime        @default(now()) // Date du mouvement de stock.
+  Ravitaillement Ravitaillement?
+
+  // Index pour filtrer les mouvements par type.
+  @@index([type])
+}
+
+model Ravitaillement {
+  ravitaillementId String @id @default(cuid())
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  produitId String
+  produit   Produit @relation(fields: [produitId], references: [produitId], onDelete: Restrict)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [userId], onDelete: Restrict)
+
+  stockId String? @unique
+  stock   Stock?  @relation(fields: [stockId], references: [stockId], onDelete: SetNull)
+
+  quantite          Decimal  @db.Decimal(15, 3)
+  stockAvant        Decimal  @db.Decimal(15, 3)
+  stockApres        Decimal  @db.Decimal(15, 3)
+  prixAchatUnitaire Decimal? @db.Decimal(15, 2)
+  coutTotal         Decimal? @db.Decimal(15, 2)
+  fournisseur       String?
+  numeroReference   String?
+  notes             String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([boutiqueId, numeroReference])
+  @@index([boutiqueId])
+  @@index([produitId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// VENTES
+
+// Modèle représentant une transaction de vente.
+model Vente {
+  venteId String @id @default(cuid())
+
+  // Attributs:
+  numeroVente String @unique // Numéro de vente unique pour référence.
+
+  boutiqueId String // Clé étrangère vers la boutique où la vente a eu lieu.
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Restrict) // Relation vers la boutique.
+
+  userId String // Clé étrangère vers l'utilisateur qui a effectué la vente.
+  User   User   @relation(fields: [userId], references: [userId], onDelete: Restrict) // Relation vers l'utilisateur.
+
+  clientId String? // Clé étrangère optionnelle vers le client.
+  client   Client? @relation(fields: [clientId], references: [clientId], onDelete: Restrict) // Relation optionnelle vers le client.
+
+  montantTotal              Decimal         @db.Decimal(15, 2) // Montant total de la vente.
+  montantPaye               Decimal         @default(0) @db.Decimal(15, 2) // Montant déjà payé.
+  montantPayeDevisePaiement Decimal?        @db.Decimal(15, 2)
+  devisePaiement            String?
+  resteAPayer               Decimal         @default(0) @db.Decimal(15, 2) // Montant restant à payer (si la vente est partielle ou en dette).
+  methodePaiement           MethodePaiement @default(ESPECES)
+
+  statut StatutVente // Statut actuel de la vente (PAYEE, PARTIELLE, DETTE).
+
+  // Relations:
+  lignesVente    LigneVente[] // Détails des produits vendus dans cette transaction.
+  dette          Dette? // Relation un-à-un optionnelle vers une dette si la vente n'est pas entièrement payée.
+  remboursements RemboursementVente[]
+
+  annuleeAt       DateTime?
+  motifAnnulation String?
+
+  createdAt DateTime @default(now()) // Date et heure de la création de la vente.
+
+  // Index pour optimiser les requêtes.
+  @@index([montantTotal]) // Pour filtrer ou trier par montant total.
+  @@index([statut]) // Pour filtrer par statut de vente.
+  @@index([createdAt]) // Pour les rapports temporels (journaliers, hebdomadaires, mensuels).
+  @@index([userId]) // Pour filtrer les ventes par utilisateur.
+}
+
+// Modèle représentant une ligne de détail d'un produit dans une vente.
+model LigneVente {
+  ligneVenteId String @id @default(cuid())
+
+  venteId String
+  vente   Vente  @relation(fields: [venteId], references: [venteId], onDelete: Cascade)
+
+  // Attributs:
+  produitId String // Clé étrangère vers le produit vendu.
+  produit   Produit @relation(fields: [produitId], references: [produitId], onDelete: Restrict) // Relation vers le produit.
+
+  quantite     Decimal @db.Decimal(15, 3) // Permet de vendre 1.5kg (Boucherie) ou 0.5L
+  prixAchat    Decimal @db.Decimal(15, 2) // Prix d'achat du produit au moment de la vente (figé pour un calcul de bénéfice précis).
+  prixUnitaire Decimal @db.Decimal(15, 2) // Prix de vente unitaire du produit au moment de la vente.
+  sousTotal    Decimal @db.Decimal(15, 2) // Sous-total pour cette ligne de vente (quantité * prixUnitaire).
+
+  // Index pour optimiser les requêtes.
+  @@index([venteId]) // Pour récupérer rapidement toutes les lignes d'une vente.
+  @@index([produitId]) // Pour analyser les ventes d'un produit spécifique.
+}
+
+// CLIENTS & DETTES
+
+// Modèle représentant un client de la boutique.
+model Client {
+  clientId  String  @id @default(cuid())
+  nom       String
+  telephone String? @unique
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  // Relations:
+  ventes Vente[] // Ventes associées à ce client.
+  dettes Dette[] // Dettes associées à ce client.
+
+  createdAt DateTime @default(now()) // Date de création du client.
+
+  // Index pour optimiser la recherche par nom de client.
+  @@index([nom])
+}
+
+// Modèle représentant une dette contractée par un client suite à une vente.
+model Dette {
+  detteId String @id @default(cuid())
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  // Attributs:
+  venteId String @unique // Clé étrangère unique vers la vente associée (relation 1-à-1).
+  vente   Vente  @relation(fields: [venteId], references: [venteId], onDelete: Restrict) // Relation vers la vente.
+
+  boutiqueId String // Clé étrangère vers la boutique.
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade) // Relation vers la boutique.
+
+  montantTotal   Decimal @db.Decimal(15, 2) // Montant total initial de la dette.
+  montantRestant Decimal @db.Decimal(15, 2) // Montant restant à payer.
+
+  statut StatutDette // Statut actuel de la dette (EN_COURS, PARTIELLE, PAYEE).
+
+  // Relations:
+  paiements PaiementDette[] // Paiements effectués pour cette dette.
+
+  createdAt DateTime @default(now()) // Date de création de la dette.
+  updatedAt DateTime @updatedAt // Date de la dernière mise à jour de la dette.
+
+  // Index pour optimiser les requêtes.
+  @@index([statut]) // Pour filtrer les dettes par statut.
+  @@index([montantRestant]) // Pour trier ou filtrer par montant restant.
+}
+
+// Modèle enregistrant les paiements effectués pour une dette.
+model PaiementDette {
+  paiementDetteId String @id @default(cuid())
+
+  detteId String
+  dette   Dette  @relation(fields: [detteId], references: [detteId])
+
+  // Attributs:
+  montant               Decimal         @db.Decimal(15, 2) // Montant du paiement.
+  montantDevisePaiement Decimal?        @db.Decimal(15, 2)
+  devisePaiement        String?
+  methode               MethodePaiement // Méthode de paiement utilisée.
+
+  createdAt DateTime @default(now()) // Date du paiement.
+
+  // Index pour optimiser les requêtes.
+  @@index([detteId]) // Pour récupérer rapidement tous les paiements d'une dette.
+  @@index([methode]) // Pour analyser les paiements par méthode.
+}
+
+// FOURNISSEURS, ACHATS ET DETTES FOURNISSEURS
+
+model Fournisseur {
+  fournisseurId String             @id @default(cuid())
+  boutiqueId    String
+  boutique      Boutique           @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+  nom           String
+  telephone     String?
+  email         String?
+  adresse       String?
+  notes         String?
+  statut        Boolean            @default(true)
+  achats        Achat[]
+  dettes        DetteFournisseur[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([boutiqueId, nom])
+  @@index([boutiqueId])
+  @@index([nom])
+}
+
+model Achat {
+  achatId          String            @id @default(cuid())
+  numeroAchat      String            @unique
+  boutiqueId       String
+  boutique         Boutique          @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Restrict)
+  fournisseurId    String?
+  fournisseur      Fournisseur?      @relation(fields: [fournisseurId], references: [fournisseurId], onDelete: Restrict)
+  userId           String
+  user             User              @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  montantTotal     Decimal           @db.Decimal(15, 2)
+  montantPaye      Decimal           @default(0) @db.Decimal(15, 2)
+  resteAPayer      Decimal           @default(0) @db.Decimal(15, 2)
+  methodePaiement  MethodePaiement   @default(ESPECES)
+  statut           StatutAchat
+  reference        String?
+  notes            String?
+  lignes           LigneAchat[]
+  detteFournisseur DetteFournisseur?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([boutiqueId])
+  @@index([fournisseurId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([statut])
+}
+
+model LigneAchat {
+  ligneAchatId String  @id @default(cuid())
+  achatId      String
+  achat        Achat   @relation(fields: [achatId], references: [achatId], onDelete: Cascade)
+  produitId    String
+  produit      Produit @relation(fields: [produitId], references: [produitId], onDelete: Restrict)
+  quantite     Decimal @db.Decimal(15, 3)
+  prixAchat    Decimal @db.Decimal(15, 2)
+  sousTotal    Decimal @db.Decimal(15, 2)
+
+  @@index([achatId])
+  @@index([produitId])
+}
+
+model DetteFournisseur {
+  detteFournisseurId String                     @id @default(cuid())
+  boutiqueId         String
+  boutique           Boutique                   @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+  fournisseurId      String
+  fournisseur        Fournisseur                @relation(fields: [fournisseurId], references: [fournisseurId], onDelete: Restrict)
+  achatId            String                     @unique
+  achat              Achat                      @relation(fields: [achatId], references: [achatId], onDelete: Restrict)
+  montantTotal       Decimal                    @db.Decimal(15, 2)
+  montantRestant     Decimal                    @db.Decimal(15, 2)
+  statut             StatutDette
+  dateEcheance       DateTime?
+  paiements          PaiementDetteFournisseur[]
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@index([boutiqueId])
+  @@index([fournisseurId])
+  @@index([statut])
+  @@index([dateEcheance])
+}
+
+model PaiementDetteFournisseur {
+  paiementDetteFournisseurId String           @id @default(cuid())
+  detteFournisseurId         String
+  detteFournisseur           DetteFournisseur @relation(fields: [detteFournisseurId], references: [detteFournisseurId], onDelete: Restrict)
+  montant                    Decimal          @db.Decimal(15, 2)
+  methode                    MethodePaiement
+  reference                  String?
+  createdAt                  DateTime         @default(now())
+
+  @@index([detteFournisseurId])
+  @@index([methode])
+}
+
+// INVENTAIRES
+
+model Inventaire {
+  inventaireId String            @id @default(cuid())
+  reference    String            @unique
+  boutiqueId   String
+  boutique     Boutique          @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+  userId       String
+  user         User              @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  notes        String?
+  lignes       LigneInventaire[]
+  createdAt    DateTime          @default(now())
+
+  @@index([boutiqueId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model LigneInventaire {
+  ligneInventaireId String     @id @default(cuid())
+  inventaireId      String
+  inventaire        Inventaire @relation(fields: [inventaireId], references: [inventaireId], onDelete: Cascade)
+  produitId         String
+  produit           Produit    @relation(fields: [produitId], references: [produitId], onDelete: Restrict)
+  quantiteTheorique Decimal    @db.Decimal(15, 3)
+  quantiteComptee   Decimal    @db.Decimal(15, 3)
+  ecart             Decimal    @db.Decimal(15, 3)
+
+  @@unique([inventaireId, produitId])
+  @@index([produitId])
+}
+
+// ANNULATIONS ET REMBOURSEMENTS DE VENTES
+
+model RemboursementVente {
+  remboursementVenteId String                    @id @default(cuid())
+  venteId              String
+  vente                Vente                     @relation(fields: [venteId], references: [venteId], onDelete: Restrict)
+  boutiqueId           String
+  boutique             Boutique                  @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Restrict)
+  userId               String
+  user                 User                      @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  montant              Decimal                   @db.Decimal(15, 2)
+  methode              MethodePaiement
+  motif                String
+  lignes               LigneRemboursementVente[]
+  createdAt            DateTime                  @default(now())
+
+  @@index([venteId])
+  @@index([boutiqueId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model LigneRemboursementVente {
+  ligneRemboursementVenteId String             @id @default(cuid())
+  remboursementVenteId      String
+  remboursement             RemboursementVente @relation(fields: [remboursementVenteId], references: [remboursementVenteId], onDelete: Cascade)
+  produitId                 String
+  produit                   Produit            @relation(fields: [produitId], references: [produitId], onDelete: Restrict)
+  quantite                  Decimal            @db.Decimal(15, 3)
+  prixUnitaire              Decimal            @db.Decimal(15, 2)
+  sousTotal                 Decimal            @db.Decimal(15, 2)
+
+  @@index([remboursementVenteId])
+  @@index([produitId])
+}
+
+// CAISSES ET SESSIONS
+
+model Caisse {
+  caisseId   String          @id @default(cuid())
+  boutiqueId String
+  boutique   Boutique        @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+  nom        String
+  active     Boolean         @default(true)
+  sessions   SessionCaisse[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([boutiqueId, nom])
+  @@index([boutiqueId])
+}
+
+model SessionCaisse {
+  sessionCaisseId String              @id @default(cuid())
+  caisseId        String
+  caisse          Caisse              @relation(fields: [caisseId], references: [caisseId], onDelete: Restrict)
+  ouverteParId    String
+  ouvertePar      User                @relation("SessionsCaisseOuvertes", fields: [ouverteParId], references: [userId], onDelete: Restrict)
+  fermeeParId     String?
+  fermeePar       User?               @relation("SessionsCaisseFermees", fields: [fermeeParId], references: [userId], onDelete: Restrict)
+  valideeParId    String?
+  valideePar      User?               @relation("SessionsCaisseValidees", fields: [valideeParId], references: [userId], onDelete: Restrict)
+  fondOuverture   Decimal             @db.Decimal(15, 2)
+  montantAttendu  Decimal?            @db.Decimal(15, 2)
+  montantReel     Decimal?            @db.Decimal(15, 2)
+  ecart           Decimal?            @db.Decimal(15, 2)
+  statut          StatutSessionCaisse @default(OUVERTE)
+  notesOuverture  String?
+  notesFermeture  String?
+  ouverteAt       DateTime            @default(now())
+  fermeeAt        DateTime?
+  valideeAt       DateTime?
+  mouvements      MouvementCaisse[]
+
+  @@index([caisseId])
+  @@index([ouverteParId])
+  @@index([statut])
+  @@index([ouverteAt])
+}
+
+model MouvementCaisse {
+  mouvementCaisseId String              @id @default(cuid())
+  sessionCaisseId   String
+  session           SessionCaisse       @relation(fields: [sessionCaisseId], references: [sessionCaisseId], onDelete: Restrict)
+  userId            String
+  user              User                @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  type              TypeMouvementCaisse
+  montant           Decimal             @db.Decimal(15, 2)
+  libelle           String
+  reference         String?
+  createdAt         DateTime            @default(now())
+
+  @@index([sessionCaisseId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ABONNEMENTS
+
+model Abonnement {
+  abonnementId String @id @default(cuid())
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  creeParId String?
+  creePar   User?   @relation("AbonnementsCrees", fields: [creeParId], references: [userId], onDelete: SetNull)
+
+  plan              PlanAbonnement
+  cycleFacturation  CycleFacturation @default(MENSUEL)
+  statut            StatutAbonnement @default(EN_ATTENTE)
+  montant           Decimal          @db.Decimal(15, 2)
+  devise            String           @default("USD")
+  methodePaiement   MethodePaiement?
+  referencePaiement String?
+  dateDebut         DateTime
+  dateFin           DateTime
+  notes             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boutiqueId])
+  @@index([creeParId])
+  @@index([statut])
+  @@index([dateDebut])
+  @@index([dateFin])
+}
+
+// CLOTURE DES JOURNEES
+
+model ClotureJournee {
+  clotureJourneeId String @id @default(cuid())
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  clotureeParId String
+  clotureePar   User   @relation("CloturesJournee", fields: [clotureeParId], references: [userId], onDelete: Restrict)
+
+  valideeParId String?
+  valideePar   User?   @relation("ValidationsCloture", fields: [valideeParId], references: [userId], onDelete: SetNull)
+
+  dateJournee                   DateTime
+  nombreVentes                  Int                  @default(0)
+  totalVentes                   Decimal              @default(0) @db.Decimal(15, 2)
+  totalMontantPaye              Decimal              @default(0) @db.Decimal(15, 2)
+  totalEncaisseDevisePrincipale Decimal              @default(0) @db.Decimal(15, 2)
+  totalEncaisseDeviseSecondaire Decimal              @default(0) @db.Decimal(15, 2)
+  totalResteAPayer              Decimal              @default(0) @db.Decimal(15, 2)
+  totalDettesCreees             Decimal              @default(0) @db.Decimal(15, 2)
+  totalPaiementsDettes          Decimal              @default(0) @db.Decimal(15, 2)
+  totalRavitaillements          Decimal              @default(0) @db.Decimal(15, 2)
+  totalDepenses                 Decimal              @default(0) @db.Decimal(15, 2)
+  totalApports                  Decimal              @default(0) @db.Decimal(15, 2)
+  totalRetraitsApports          Decimal              @default(0) @db.Decimal(15, 2)
+  montantEspeces                Decimal              @default(0) @db.Decimal(15, 2)
+  montantMobileMoney            Decimal              @default(0) @db.Decimal(15, 2)
+  montantBanque                 Decimal              @default(0) @db.Decimal(15, 2)
+  fondCaisseOuverture           Decimal              @default(0) @db.Decimal(15, 2)
+  montantAttenduCaisse          Decimal              @default(0) @db.Decimal(15, 2)
+  montantReelCaisse             Decimal?             @db.Decimal(15, 2)
+  ecartCaisse                   Decimal?             @db.Decimal(15, 2)
+  statut                        StatutClotureJournee @default(CLOTUREE)
+  notes                         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([boutiqueId, dateJournee])
+  @@index([boutiqueId])
+  @@index([clotureeParId])
+  @@index([valideeParId])
+  @@index([dateJournee])
+  @@index([statut])
+}
+
+// DEPENSES
+
+model Depense {
+  depenseId String @id @default(cuid())
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [userId], onDelete: Restrict)
+
+  categorie         CategorieDepense
+  libelle           String
+  montant           Decimal          @db.Decimal(15, 2)
+  methodePaiement   MethodePaiement
+  referencePaiement String?
+  notes             String?
+  dateDepense       DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([boutiqueId])
+  @@index([userId])
+  @@index([categorie])
+  @@index([dateDepense])
+  @@index([methodePaiement])
+}
+
+// APPORTS DE CAISSE
+
+model Apport {
+  apportId String @id @default(cuid())
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [userId], onDelete: Restrict)
+
+  libelle           String
+  montant           Decimal         @db.Decimal(15, 2)
+  montantRestant    Decimal         @db.Decimal(15, 2)
+  methodePaiement   MethodePaiement
+  referencePaiement String?
+  notes             String?
+  statut            StatutApport    @default(EN_COURS)
+  dateApport        DateTime        @default(now())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  retraits RetraitApport[]
+
+  @@index([boutiqueId])
+  @@index([userId])
+  @@index([statut])
+  @@index([dateApport])
+  @@index([methodePaiement])
+}
+
+model RetraitApport {
+  retraitApportId String @id @default(cuid())
+
+  apportId String
+  apport   Apport @relation(fields: [apportId], references: [apportId], onDelete: Cascade)
+
+  boutiqueId String
+  boutique   Boutique @relation(fields: [boutiqueId], references: [boutiqueId], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [userId], onDelete: Restrict)
+
+  montant     Decimal  @db.Decimal(15, 2)
+  notes       String?
+  dateRetrait DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([apportId])
+  @@index([boutiqueId])
+  @@index([userId])
+  @@index([dateRetrait])
+}
+
+// LOGS SYSTEME
+
+// Modèle pour l'enregistrement des actions importantes du système à des fins d'audit.
+model JournalAction {
+  journalActionId String @id @default(cuid())
+
+  userId    String
+  User      User       @relation(fields: [userId], references: [userId], onDelete: Restrict)
+  // Attributs:
+  type      TypeAction // Type d'action effectuée (ex: CREATION_PRODUIT, VENTE_CREATION).
+  entite    String? // Nom de l'entité affectée (ex: "Produit", "Vente").
+  entiteId  String? // ID de l'entité affectée.
+  createdAt DateTime   @default(now()) // Date et heure de l'action.
+
+  // Index pour optimiser les requêtes d'audit.
+  @@index([userId]) // Pour filtrer les actions par utilisateur.
+  @@index([type]) // Pour filtrer les actions par type.
+  @@index([entite]) // Pour filtrer les actions par entité.
+  @@index([createdAt]) // Pour les rapports d'audit temporels.
+}

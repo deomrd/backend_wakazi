@@ -1,0 +1,1 @@
+ALTER TABLE `ClotureJournee` ADD COLUMN `totalDepenses` DECIMAL(15, 2) NOT NULL DEFAULT 0;

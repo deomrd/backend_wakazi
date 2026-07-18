@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wakazi Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">W</span>
+          <div>
+            <strong>Wakazi</strong>
+            <small>Console API</small>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Navigation principale">
+          <button class="nav-item active" data-view="dashboardView">Dashboard</button>
+          <button class="nav-item" data-view="accountView">Compte</button>
+          <button class="nav-item" data-view="employeeView">Employes</button>
+          <button class="nav-item" data-view="settingsView">Parametres</button>
+          <button class="nav-item" data-view="stockView">Stock</button>
+          <button class="nav-item" data-view="salesView">Ventes</button>
+          <button class="nav-item" data-view="expenseView">Depenses</button>
+          <button class="nav-item" data-view="apportView">Apports</button>
+          <button class="nav-item" data-view="closureView">Cloture</button>
+          <button class="nav-item" data-view="debtView">Dettes</button>
+          <button class="nav-item" data-view="purchaseView">Achats</button>
+          <button class="nav-item" data-view="inventoryView">Inventaires</button>
+          <button class="nav-item" data-view="cashView">Caisse</button>
+          <button class="nav-item" data-view="reportView">Rapports</button>
+        </nav>
+
+        <div class="session-card">
+          <span class="label">Session</span>
+          <strong id="sessionName">Non connecte</strong>
+          <small id="sessionMeta">Aucun token actif</small>
+          <button class="ghost full" id="logoutBtn" type="button">Deconnexion</button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Interface de test</p>
+            <h1>Operations boutique</h1>
+          </div>
+          <div class="status-pill" id="apiStatus">API non verifiee</div>
+        </header>
+
+        <section class="view active" id="dashboardView">
+          <section class="panel dashboard-hero">
+            <div>
+              <p class="eyebrow">Tableau de bord</p>
+              <h2 id="dashboardTitle">Vue du jour</h2>
+            </div>
+            <div class="dashboard-filter">
+              <input id="dashboardDateStart" type="date" />
+              <input id="dashboardDateEnd" type="date" />
+              <button class="ghost" id="refreshDashboardBtn" type="button">Actualiser</button>
+            </div>
+          </section>
+
+          <section class="dashboard-kpis" id="dashboardKpis">
+            <div><span>Ventes payees</span><strong>0.00</strong></div>
+            <div><span>Depenses</span><strong>0.00</strong></div>
+            <div><span>Caisse attendue</span><strong>0.00</strong></div>
+            <div><span>Dettes ouvertes</span><strong>0.00</strong></div>
+          </section>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Performance</p>
+                  <h2>Meilleurs produits</h2>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Quantite</th>
+                      <th>Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardTopProducts"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Alertes</p>
+                  <h2>Stock faible</h2>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Stock</th>
+                      <th>Prix</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardLowStock"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Recent</p>
+                  <h2>Dernieres ventes</h2>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Numero</th>
+                      <th>Client</th>
+                      <th>Paye</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardRecentSales"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Recent</p>
+                  <h2>Dernieres depenses</h2>
+                </div>
+                <div class="status-pill" id="dashboardClosureStatus">Non cloturee</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Libelle</th>
+                      <th>Categorie</th>
+                      <th>Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardRecentExpenses"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="accountView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Creation</p>
+                  <h2>Boutique multi-etape</h2>
+                </div>
+                <div class="step-indicator">
+                  <span class="step-dot active" data-step-dot="0"></span>
+                  <span class="step-dot" data-step-dot="1"></span>
+                  <span class="step-dot" data-step-dot="2"></span>
+                </div>
+              </div>
+
+              <form id="signupForm">
+                <div class="step active" data-step="0">
+                  <div class="field">
+                    <label for="signupNom">Nom proprietaire</label>
+                    <input id="signupNom" name="nom" required minlength="2" placeholder="Kambale Luendo" />
+                  </div>
+                  <div class="field">
+                    <label for="signupTelephone">Telephone</label>
+                    <input id="signupTelephone" name="telephone" required pattern="[0-9]{9,15}" placeholder="243812345678" />
+                  </div>
+                  <div class="field">
+                    <label for="signupPin">Code PIN</label>
+                    <input id="signupPin" name="motDePasse" required pattern="[0-9]{4}" maxlength="4" placeholder="1234" />
+                  </div>
+                </div>
+
+                <div class="step" data-step="1">
+                  <div class="field">
+                    <label for="signupBoutique">Nom boutique</label>
+                    <input id="signupBoutique" name="nomBoutique" required minlength="2" placeholder="Wakazi Store" />
+                  </div>
+                  <div class="field">
+                    <label for="signupType">Type entreprise</label>
+                    <select id="signupType" name="typeEntreprise" required>
+                      <option value="BOUTIQUE_ALIMENTAIRE">Boutique alimentaire</option>
+                      <option value="PHARMACIE">Pharmacie</option>
+                      <option value="QUINCAILLERIE">Quincaillerie</option>
+                      <option value="BOUCHERIE">Boucherie</option>
+                      <option value="CHARCUTERIE">Charcuterie</option>
+                      <option value="BOULANGERIE">Boulangerie</option>
+                      <option value="BOUTIQUE_HABILLEMENT">Habillement</option>
+                      <option value="SUPERMARCHE">Supermarche</option>
+                      <option value="AUTRE">Autre</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="signupAdresse">Adresse</label>
+                    <input id="signupAdresse" name="adresseBoutique" placeholder="Goma" />
+                  </div>
+                </div>
+
+                <div class="step" data-step="2">
+                  <div class="field">
+                    <label for="signupDevise">Devise</label>
+                    <input id="signupDevise" name="devise" value="USD" />
+                  </div>
+                  <div class="field">
+                    <label for="signupDeviseSecondaire">Devise secondaire</label>
+                    <input id="signupDeviseSecondaire" name="deviseSecondaire" placeholder="Optionnel" />
+                  </div>
+                  <div class="field">
+                    <label for="signupTauxDeviseSecondaire">Taux devise secondaire</label>
+                    <input id="signupTauxDeviseSecondaire" name="tauxDeviseSecondaire" type="number" min="0.000001" step="0.000001" placeholder="Ex: 2800" />
+                  </div>
+                  <div class="field">
+                    <label for="signupRccm">RCCM</label>
+                    <input id="signupRccm" name="RCCM" placeholder="Optionnel" />
+                  </div>
+                  <div class="review-box" id="signupReview"></div>
+                </div>
+
+                <div class="actions">
+                  <button class="ghost" id="prevStepBtn" type="button">Retour</button>
+                  <button class="primary" id="nextStepBtn" type="button">Continuer</button>
+                  <button class="primary hidden" id="createAccountBtn" type="submit">Creer</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Connexion</p>
+                  <h2>Acces boutique</h2>
+                </div>
+              </div>
+              <form id="loginForm" class="stack">
+                <div class="field">
+                  <label for="loginIdentifiant">Telephone ou nom utilisateur</label>
+                  <input id="loginIdentifiant" name="identifiant" required minlength="3" />
+                </div>
+                <div class="field">
+                  <label for="loginPin">Code PIN</label>
+                  <input id="loginPin" name="motDePasse" required pattern="[0-9]{4}" maxlength="4" />
+                </div>
+                <button class="primary full" type="submit">Se connecter</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Securite</p>
+                  <h2>Changer le PIN</h2>
+                </div>
+              </div>
+              <form id="changePinForm" class="stack">
+                <div class="field">
+                  <label for="currentPin">PIN actuel</label>
+                  <input id="currentPin" name="currentPin" required pattern="[0-9]{4}" maxlength="4" />
+                </div>
+                <div class="field">
+                  <label for="newPin">Nouveau PIN</label>
+                  <input id="newPin" name="newPin" required pattern="[0-9]{4}" maxlength="4" />
+                </div>
+                <button class="primary full" type="submit">Changer PIN</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Identifiant</p>
+                  <h2>Changer nom utilisateur</h2>
+                </div>
+              </div>
+              <form id="changeUsernameForm" class="stack">
+                <div class="field">
+                  <label for="newUsername">Nom utilisateur</label>
+                  <input id="newUsername" name="nomUtilisateur" required minlength="3" />
+                </div>
+                <div class="field">
+                  <label for="usernameCurrentPin">PIN actuel</label>
+                  <input id="usernameCurrentPin" name="currentPin" required pattern="[0-9]{4}" maxlength="4" />
+                </div>
+                <button class="primary full" type="submit">Changer nom utilisateur</button>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="employeeView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Personnel</p>
+                  <h2>Nouvel employe</h2>
+                </div>
+              </div>
+              <form id="employeeForm" class="stack">
+                <div class="field">
+                  <label for="employeeUsername">Nom utilisateur</label>
+                  <input id="employeeUsername" name="nomUtilisateur" required minlength="3" />
+                </div>
+                <div class="field">
+                  <label for="employeeName">Nom complet</label>
+                  <input id="employeeName" name="nom" required minlength="2" />
+                </div>
+                <div class="field">
+                  <label for="employeeAddress">Adresse</label>
+                  <input id="employeeAddress" name="adresse" />
+                </div>
+                <div class="field">
+                  <label for="employeeRole">Role</label>
+                  <select id="employeeRole" name="roleNom">
+                    <option value="VENDEUR">Vendeur</option>
+                    <option value="GERANT">Gerant</option>
+                  </select>
+                </div>
+                <button class="primary full" type="submit">Creer employe</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Filtres</p>
+                  <h2>Recherche employes</h2>
+                </div>
+                <button class="ghost" id="refreshEmployeesBtn" type="button">Actualiser</button>
+              </div>
+              <div class="stack">
+                <div class="field">
+                  <label for="employeeSearch">Recherche</label>
+                  <input id="employeeSearch" type="search" placeholder="Nom, utilisateur, adresse" />
+                </div>
+                <div class="field">
+                  <label for="employeeRoleFilter">Role</label>
+                  <select id="employeeRoleFilter">
+                    <option value="">Tous</option>
+                    <option value="VENDEUR">Vendeur</option>
+                    <option value="GERANT">Gerant</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="employeeStatusFilter">Statut</label>
+                  <select id="employeeStatusFilter">
+                    <option value="">Tous</option>
+                    <option value="true">Actifs</option>
+                    <option value="false">Desactives</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Equipe</p>
+                <h2>Gerants et vendeurs</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Utilisateur</th>
+                    <th>Nom</th>
+                    <th>Role</th>
+                    <th>Adresse</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="employeesTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="settingsView">
+          <section class="panel dashboard-hero">
+            <div>
+              <p class="eyebrow">Boutique</p>
+              <h2 id="settingsTitle">Parametres boutique</h2>
+            </div>
+            <button class="ghost" id="refreshSettingsBtn" type="button">Actualiser</button>
+          </section>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Identite</p>
+                  <h2>Nom boutique</h2>
+                </div>
+              </div>
+              <form id="boutiqueNomForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueNom">Nom</label>
+                  <input id="boutiqueNom" name="nom" required minlength="2" />
+                </div>
+                <button class="primary full" type="submit">Modifier nom</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Localisation</p>
+                  <h2>Adresse</h2>
+                </div>
+              </div>
+              <form id="boutiqueAdresseForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueAdresse">Adresse</label>
+                  <input id="boutiqueAdresse" name="adresse" />
+                </div>
+                <button class="primary full" type="submit">Modifier adresse</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Monnaie</p>
+                  <h2>Devise</h2>
+                </div>
+              </div>
+              <form id="boutiqueDeviseForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueDevise">Devise</label>
+                  <input id="boutiqueDevise" name="devise" required minlength="2" maxlength="6" />
+                </div>
+                <button class="primary full" type="submit">Modifier devise</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Monnaie</p>
+                  <h2>Devise secondaire</h2>
+                </div>
+              </div>
+              <form id="boutiqueDeviseSecondaireForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueDeviseSecondaire">Devise secondaire</label>
+                  <input id="boutiqueDeviseSecondaire" name="deviseSecondaire" maxlength="6" />
+                </div>
+                <button class="primary full" type="submit">Modifier devise secondaire</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Taux</p>
+                  <h2>Taux devise secondaire</h2>
+                </div>
+              </div>
+              <form id="boutiqueTauxDeviseSecondaireForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueTauxDeviseSecondaire">1 devise principale =</label>
+                  <input id="boutiqueTauxDeviseSecondaire" name="tauxDeviseSecondaire" type="number" min="0.000001" step="0.000001" />
+                </div>
+                <button class="primary full" type="submit">Modifier taux</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Legal</p>
+                  <h2>RCCM</h2>
+                </div>
+              </div>
+              <form id="boutiqueRccmForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueRccm">RCCM</label>
+                  <input id="boutiqueRccm" name="RCCM" />
+                </div>
+                <button class="primary full" type="submit">Modifier RCCM</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Activite</p>
+                  <h2>Type entreprise</h2>
+                </div>
+              </div>
+              <form id="boutiqueTypeForm" class="stack">
+                <div class="field">
+                  <label for="boutiqueType">Type</label>
+                  <select id="boutiqueType" name="typeEntreprise" required>
+                    <option value="BOUTIQUE_ALIMENTAIRE">Boutique alimentaire</option>
+                    <option value="PHARMACIE">Pharmacie</option>
+                    <option value="QUINCAILLERIE">Quincaillerie</option>
+                    <option value="BOUCHERIE">Boucherie</option>
+                    <option value="CHARCUTERIE">Charcuterie</option>
+                    <option value="BOULANGERIE">Boulangerie</option>
+                    <option value="BOUTIQUE_HABILLEMENT">Habillement</option>
+                    <option value="SUPERMARCHE">Supermarche</option>
+                    <option value="AUTRE">Autre</option>
+                  </select>
+                </div>
+                <button class="primary full" type="submit">Modifier type</button>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="stockView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Produits</p>
+                  <h2>Creation stock</h2>
+                </div>
+              </div>
+              <form id="productForm" class="grid compact">
+                <div class="field">
+                  <label for="productName">Produit</label>
+                  <input id="productName" name="nom" required />
+                </div>
+                <div class="field">
+                  <label for="productBuy">Prix achat</label>
+                  <input id="productBuy" name="prixAchat" type="number" min="0" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="productSell">Prix vente</label>
+                  <input id="productSell" name="prixVente" type="number" min="0.01" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="productStock">Stock initial</label>
+                  <input id="productStock" name="stockActuel" type="number" min="0" step="0.001" value="0" />
+                </div>
+                <div class="field">
+                  <label for="productUnit">Unite</label>
+                  <select id="productUnit" name="uniteMesure">
+                    <option value="Pieces">Pieces</option>
+                    <option value="Kilogramme">Kilogramme</option>
+                    <option value="Litre">Litre</option>
+                    <option value="Boite">Boite</option>
+                    <option value="Paquet">Paquet</option>
+                  </select>
+                </div>
+                <button class="primary full-span" type="submit">Ajouter produit</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Mouvements</p>
+                  <h2>Ajuster stock</h2>
+                </div>
+              </div>
+              <form id="movementForm" class="stack">
+                <div class="field">
+                  <label for="movementProduct">Produit</label>
+                  <select id="movementProduct" name="produitId" required></select>
+                </div>
+                <div class="field">
+                  <label for="movementType">Type</label>
+                  <select id="movementType" name="type">
+                    <option value="ENTREE">Entree</option>
+                    <option value="SORTIE">Sortie</option>
+                    <option value="AJUSTEMENT">Ajustement</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="movementQty">Quantite</label>
+                  <input id="movementQty" name="quantite" type="number" min="0.001" step="0.001" required />
+                </div>
+                <div class="field">
+                  <label for="movementReason">Raison</label>
+                  <input id="movementReason" name="raison" />
+                </div>
+                <button class="primary full" type="submit">Enregistrer</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Categories</p>
+                  <h2>Familles produits</h2>
+                </div>
+              </div>
+              <form id="categoryForm" class="stack">
+                <div class="field">
+                  <label for="categoryName">Nom categorie</label>
+                  <input id="categoryName" name="nom" required minlength="2" />
+                </div>
+                <button class="primary full" type="submit">Ajouter categorie</button>
+              </form>
+              <div class="chips" id="categoryList"></div>
+            </section>
+          </div>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Ravitaillement</p>
+                  <h2>Reception marchandise</h2>
+                </div>
+              </div>
+              <form id="restockForm" class="stack">
+                <div class="field">
+                  <label for="restockProduct">Produit</label>
+                  <select id="restockProduct" name="produitId" required></select>
+                </div>
+                <div class="field">
+                  <label for="restockQty">Quantite</label>
+                  <input id="restockQty" name="quantite" type="number" min="0.001" step="0.001" required />
+                </div>
+                <div class="field">
+                  <label for="restockPrice">Prix achat unitaire</label>
+                  <input id="restockPrice" name="prixAchatUnitaire" type="number" min="0" step="0.01" />
+                </div>
+                <div class="field">
+                  <label for="restockSupplier">Fournisseur</label>
+                  <input id="restockSupplier" name="fournisseur" />
+                </div>
+                <button class="primary full" type="submit">Ravitailler</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Produit</p>
+                  <h2>Mise a jour rapide</h2>
+                </div>
+              </div>
+              <form id="productUpdateForm" class="stack">
+                <div class="field">
+                  <label for="updateProduct">Produit</label>
+                  <select id="updateProduct" name="produitId" required></select>
+                </div>
+                <div class="field">
+                  <label for="updatePrice">Nouveau prix vente</label>
+                  <input id="updatePrice" name="prixVente" type="number" min="0.01" step="0.01" required />
+                </div>
+                <button class="primary full" type="submit">Modifier</button>
+              </form>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Inventaire</p>
+                <h2>Produits disponibles</h2>
+              </div>
+              <div class="dashboard-filter">
+                <input id="productSearch" type="search" placeholder="Rechercher" />
+                <button class="ghost" id="refreshStockBtn" type="button">Actualiser</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produit</th>
+                    <th>QR</th>
+                    <th>Prix</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Journal</p>
+                  <h2>Mouvements stock</h2>
+                </div>
+                <button class="ghost" id="refreshMovementsBtn" type="button">Actualiser</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Type</th>
+                      <th>Quantite</th>
+                      <th>Raison</th>
+                    </tr>
+                  </thead>
+                  <tbody id="movementsTable"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Historique</p>
+                  <h2>Ravitaillements</h2>
+                </div>
+                <button class="ghost" id="refreshRestocksBtn" type="button">Actualiser</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Quantite</th>
+                      <th>Cout</th>
+                      <th>Fournisseur</th>
+                    </tr>
+                  </thead>
+                  <tbody id="restocksTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="salesView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Client</p>
+                  <h2>Nouveau client</h2>
+                </div>
+              </div>
+              <form id="clientForm" class="stack">
+                <div class="field">
+                  <label for="clientName">Nom</label>
+                  <input id="clientName" name="nom" required />
+                </div>
+                <div class="field">
+                  <label for="clientPhone">Telephone</label>
+                  <input id="clientPhone" name="telephone" pattern="[0-9]{9,15}" />
+                </div>
+                <button class="primary full" type="submit">Ajouter client</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Vente</p>
+                  <h2>Encaisser</h2>
+                </div>
+              </div>
+              <form id="saleForm" class="stack">
+                <div class="field">
+                  <label for="saleClient">Client</label>
+                  <input id="saleClient" name="clientNom" list="clientSuggestions" autocomplete="off" placeholder="Comptoir ou nom du client" />
+                  <datalist id="clientSuggestions"></datalist>
+                </div>
+                <div class="sale-line">
+                  <div class="field">
+                    <label for="saleProductName">Produit</label>
+                    <input id="saleProductName" name="produitNom" list="productSuggestions" autocomplete="off" placeholder="Tapez le nom du produit" />
+                    <datalist id="productSuggestions"></datalist>
+                  </div>
+                  <div class="field">
+                    <label for="saleQty">Quantite</label>
+                    <input id="saleQty" name="quantite" type="number" min="0.001" step="0.001" value="1" />
+                  </div>
+                </div>
+                <button class="ghost full" id="addSaleLineBtn" type="button">Ajouter le produit a la facture</button>
+                <div class="scanner-box">
+                  <div class="invoice-head">
+                    <strong>Scanner QR</strong>
+                    <div class="row-actions">
+                      <button class="ghost small" id="startQrScanBtn" type="button">Scanner</button>
+                      <button class="ghost small danger hidden" id="stopQrScanBtn" type="button">Arreter</button>
+                    </div>
+                  </div>
+                  <video id="qrVideo" class="qr-video hidden" playsinline muted></video>
+                  <div class="sale-line">
+                    <div class="field">
+                      <label for="qrProductName">Produit scanne</label>
+                      <input id="qrProductName" readonly placeholder="Aucun produit scanne" />
+                    </div>
+                    <div class="field">
+                      <label for="qrQty">Quantite</label>
+                      <input id="qrQty" type="number" min="0.001" step="0.001" value="1" />
+                    </div>
+                  </div>
+                  <input id="qrRawCode" class="hidden" />
+                  <button class="ghost full" id="addScannedProductBtn" type="button">Ajouter produit scanne</button>
+                </div>
+                <div class="invoice-box">
+                  <div class="invoice-head">
+                    <strong>Facture en cours</strong>
+                    <div class="row-actions">
+                      <span class="status-pill" id="invoiceCount">0 produit</span>
+                      <button class="ghost small" id="clearInvoiceBtn" type="button">Vider</button>
+                    </div>
+                  </div>
+                  <div class="table-wrap compact-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Produit</th>
+                          <th>Qte</th>
+                          <th>Prix</th>
+                          <th>Total</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="invoiceLinesTable"></tbody>
+                    </table>
+                  </div>
+                  <div class="invoice-total">
+                    <span>Total facture</span>
+                    <strong id="invoiceTotal">0.00</strong>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="salePaymentMode">Cloture facture</label>
+                  <select id="salePaymentMode" name="paymentMode">
+                    <option value="ESPECES">Especes</option>
+                    <option value="MOBILE_MONEY">Mobile money</option>
+                    <option value="BANQUE">Banque</option>
+                    <option value="CREDIT">A credit</option>
+                  </select>
+                </div>
+                <div class="payment-row">
+                  <div class="field">
+                    <label for="saleCurrency">Devise encaissee</label>
+                    <select id="saleCurrency" name="devisePaiement"></select>
+                  </div>
+                  <div class="field">
+                    <label for="salePaidAmount">Montant encaisse</label>
+                    <input id="salePaidAmount" name="montantPayeDevisePaiement" type="number" min="0" step="0.01" placeholder="Auto si vide" />
+                  </div>
+                  <div class="field">
+                    <label>Equivalent principal</label>
+                    <input id="salePaidPrincipalPreview" readonly />
+                  </div>
+                </div>
+                <button class="primary full" type="submit">Cloturer la facture</button>
+              </form>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Historique</p>
+                <h2>Dernieres ventes</h2>
+              </div>
+              <div class="dashboard-filter">
+                <input id="salesDateStart" type="date" />
+                <input id="salesDateEnd" type="date" />
+                <select id="salesStatusFilter">
+                  <option value="">Tous</option>
+                  <option value="PAYEE">Payee</option>
+                  <option value="PARTIELLE">Partielle</option>
+                  <option value="DETTE">Dette</option>
+                </select>
+                <button class="ghost" id="refreshSalesBtn" type="button">Actualiser</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Numero</th>
+                    <th>Client</th>
+                    <th>Total</th>
+                    <th>Paye</th>
+                    <th>Methode</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="debtView">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Creances</p>
+                <h2>Dettes clients</h2>
+              </div>
+              <button class="ghost" id="refreshDebtsBtn" type="button">Actualiser</button>
+            </div>
+            <form id="debtPaymentForm" class="payment-row">
+              <div class="field">
+                <label for="debtSelect">Dette</label>
+                <select id="debtSelect" name="detteId" required></select>
+              </div>
+              <div class="field">
+                <label for="debtAmount">Montant</label>
+                <input id="debtAmount" name="montant" type="number" min="0.01" step="0.01" required />
+              </div>
+              <div class="field">
+                <label for="debtCurrency">Devise</label>
+                <select id="debtCurrency" name="devisePaiement"></select>
+              </div>
+              <div class="field">
+                <label for="debtMethod">Methode</label>
+                <select id="debtMethod" name="methode">
+                  <option value="ESPECES">Especes</option>
+                  <option value="MOBILE_MONEY">Mobile money</option>
+                  <option value="BANQUE">Banque</option>
+                </select>
+              </div>
+              <button class="primary" type="submit">Payer</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Produits</th>
+                    <th>Total</th>
+                    <th>Restant</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody id="debtsTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="expenseView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Sorties caisse</p>
+                  <h2>Nouvelle depense</h2>
+                </div>
+              </div>
+              <form id="expenseForm" class="stack">
+                <div class="field">
+                  <label for="expenseLabel">Libelle</label>
+                  <input id="expenseLabel" name="libelle" required minlength="2" placeholder="Transport marchandises" />
+                </div>
+                <div class="field">
+                  <label for="expenseCategory">Categorie</label>
+                  <select id="expenseCategory" name="categorie">
+                    <option value="LOYER">Loyer</option>
+                    <option value="SALAIRE">Salaire</option>
+                    <option value="TRANSPORT">Transport</option>
+                    <option value="FOURNITURE">Fourniture</option>
+                    <option value="ELECTRICITE">Electricite</option>
+                    <option value="INTERNET">Internet</option>
+                    <option value="TAXE">Taxe</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                    <option value="AUTRE">Autre</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="expenseAmount">Montant</label>
+                  <input id="expenseAmount" name="montant" type="number" min="0.01" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="expenseMethod">Methode paiement</label>
+                  <select id="expenseMethod" name="methodePaiement">
+                    <option value="ESPECES">Especes</option>
+                    <option value="MOBILE_MONEY">Mobile money</option>
+                    <option value="BANQUE">Banque</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="expenseReference">Reference</label>
+                  <input id="expenseReference" name="referencePaiement" placeholder="Optionnel" />
+                </div>
+                <div class="field">
+                  <label for="expenseNotes">Notes</label>
+                  <input id="expenseNotes" name="notes" placeholder="Optionnel" />
+                </div>
+                <button class="primary full" type="submit">Enregistrer depense</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+              <div>
+                <p class="eyebrow">Historique</p>
+                <h2>Depenses boutique</h2>
+              </div>
+                <div class="dashboard-filter">
+                  <input id="expenseSearch" type="search" placeholder="Rechercher" />
+                  <select id="expenseMethodFilter">
+                    <option value="">Toutes</option>
+                    <option value="ESPECES">Especes</option>
+                    <option value="MOBILE_MONEY">Mobile money</option>
+                    <option value="BANQUE">Banque</option>
+                  </select>
+                  <button class="ghost" id="refreshExpensesBtn" type="button">Actualiser</button>
+                </div>
+              </div>
+              <div class="expense-summary">
+                <span>Total depenses</span>
+                <strong id="expensesTotal">0.00</strong>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Libelle</th>
+                      <th>Categorie</th>
+                      <th>Montant</th>
+                      <th>Methode</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expensesTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="apportView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Caisse</p>
+                  <h2>Nouvel apport</h2>
+                </div>
+              </div>
+              <form id="apportForm" class="stack">
+                <div class="field">
+                  <label for="apportLabel">Libelle</label>
+                  <input id="apportLabel" name="libelle" required minlength="2" />
+                </div>
+                <div class="field">
+                  <label for="apportAmount">Montant</label>
+                  <input id="apportAmount" name="montant" type="number" min="0.01" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="apportMethod">Methode</label>
+                  <select id="apportMethod" name="methodePaiement">
+                    <option value="ESPECES">Especes</option>
+                    <option value="MOBILE_MONEY">Mobile money</option>
+                    <option value="BANQUE">Banque</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="apportReference">Reference</label>
+                  <input id="apportReference" name="referencePaiement" />
+                </div>
+                <button class="primary full" type="submit">Enregistrer apport</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Recuperation</p>
+                  <h2>Retrait d'apport</h2>
+                </div>
+              </div>
+              <form id="retraitApportForm" class="stack">
+                <div class="field">
+                  <label for="retraitApportSelect">Apport</label>
+                  <select id="retraitApportSelect" name="apportId" required></select>
+                </div>
+                <div class="field">
+                  <label for="retraitApportAmount">Montant</label>
+                  <input id="retraitApportAmount" name="montant" type="number" min="0.01" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="retraitApportNotes">Notes</label>
+                  <input id="retraitApportNotes" name="notes" />
+                </div>
+                <button class="primary full" type="submit">Enregistrer retrait</button>
+              </form>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Historique</p>
+                <h2>Apports et retraits</h2>
+              </div>
+              <button class="ghost" id="refreshApportsBtn" type="button">Actualiser</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Libelle</th>
+                    <th>Montant</th>
+                    <th>Restant</th>
+                    <th>Statut</th>
+                    <th>Retraits</th>
+                  </tr>
+                </thead>
+                <tbody id="apportsTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="closureView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Fin de journee</p>
+                  <h2>Cloturer la caisse</h2>
+                </div>
+                <button class="ghost" id="previewClosureBtn" type="button">Apercu</button>
+              </div>
+              <form id="closureForm" class="stack">
+                <div class="field">
+                  <label for="closureDate">Date journee</label>
+                  <input id="closureDate" name="dateJournee" type="date" />
+                </div>
+                <div class="field">
+                  <label for="closureOpeningCash">Fond caisse ouverture</label>
+                  <input id="closureOpeningCash" name="fondCaisseOuverture" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field">
+                  <label for="closureRealCash">Argent en main</label>
+                  <input id="closureRealCash" name="montantReelCaisse" type="number" min="0" step="0.01" required />
+                </div>
+                <div class="field">
+                  <label for="closureNotes">Notes</label>
+                  <input id="closureNotes" name="notes" placeholder="Optionnel" />
+                </div>
+                <button class="primary full" type="submit">Cloturer journee</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Apercu</p>
+                  <h2>Argent attendu</h2>
+                </div>
+              </div>
+              <div class="metrics" id="closurePreview">
+                <div><span>Ventes payees</span><strong>0.00</strong></div>
+                <div><span>Depenses</span><strong>0.00</strong></div>
+                <div><span>Especes nettes</span><strong>0.00</strong></div>
+                <div><span>Caisse attendue</span><strong>0.00</strong></div>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Historique</p>
+                <h2>Clotures journalieres</h2>
+              </div>
+              <div class="dashboard-filter">
+                <input id="closureDateStart" type="date" />
+                <input id="closureDateEnd" type="date" />
+                <button class="ghost" id="refreshClosuresBtn" type="button">Actualiser</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Ventes</th>
+                    <th>Depenses</th>
+                    <th>Attendu</th>
+                    <th>En main</th>
+                    <th>Ecart</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="closuresTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="purchaseView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Partenaires</p><h2>Nouveau fournisseur</h2></div></div>
+              <form id="supplierForm" class="stack">
+                <div class="field"><label for="supplierName">Nom</label><input id="supplierName" name="nom" required minlength="2" /></div>
+                <div class="field"><label for="supplierPhone">Telephone</label><input id="supplierPhone" name="telephone" pattern="[0-9]{9,15}" /></div>
+                <div class="field"><label for="supplierEmail">E-mail</label><input id="supplierEmail" name="email" type="email" /></div>
+                <div class="field"><label for="supplierAddress">Adresse</label><input id="supplierAddress" name="adresse" /></div>
+                <button class="primary full" type="submit">Ajouter fournisseur</button>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Reception</p><h2>Nouvel achat</h2></div></div>
+              <form id="purchaseForm" class="stack">
+                <div class="field"><label for="purchaseSupplier">Fournisseur</label><select id="purchaseSupplier" name="fournisseurId"><option value="">Aucun</option></select></div>
+                <div class="field"><label for="purchaseProduct">Produit</label><select id="purchaseProduct" name="produitId" required></select></div>
+                <div class="field"><label for="purchaseQuantity">Quantite</label><input id="purchaseQuantity" name="quantite" type="number" min="0.001" step="0.001" required /></div>
+                <div class="field"><label for="purchasePrice">Prix achat unitaire</label><input id="purchasePrice" name="prixAchat" type="number" min="0" step="0.01" required /></div>
+                <div class="field"><label for="purchasePaid">Montant paye</label><input id="purchasePaid" name="montantPaye" type="number" min="0" step="0.01" value="0" /></div>
+                <div class="field"><label for="purchaseMethod">Paiement</label><select id="purchaseMethod" name="methodePaiement"><option>ESPECES</option><option>MOBILE_MONEY</option><option>BANQUE</option></select></div>
+                <div class="field"><label for="purchaseDueDate">Echeance</label><input id="purchaseDueDate" name="dateEcheance" type="date" /></div>
+                <button class="primary full" type="submit">Enregistrer achat</button>
+              </form>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Historique</p><h2>Achats</h2></div><button class="ghost" id="refreshPurchasesBtn" type="button">Actualiser</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Numero</th><th>Fournisseur</th><th>Total</th><th>Paye</th><th>Restant</th><th>Statut</th></tr></thead><tbody id="purchasesTable"></tbody></table></div>
+          </section>
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Annuaire</p><h2>Fournisseurs</h2></div></div>
+              <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Telephone</th><th>E-mail</th><th>Statut</th></tr></thead><tbody id="suppliersTable"></tbody></table></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Credit</p><h2>Dettes fournisseurs</h2></div></div>
+              <form id="supplierDebtPaymentForm" class="inline-form">
+                <select id="supplierDebtSelect" name="detteFournisseurId" required></select>
+                <input name="montant" type="number" min="0.01" step="0.01" placeholder="Montant" required />
+                <select name="methode"><option>ESPECES</option><option>MOBILE_MONEY</option><option>BANQUE</option></select>
+                <button class="primary" type="submit">Payer</button>
+              </form>
+              <div class="table-wrap"><table><thead><tr><th>Fournisseur</th><th>Achat</th><th>Total</th><th>Restant</th><th>Statut</th></tr></thead><tbody id="supplierDebtsTable"></tbody></table></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="inventoryView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Comptage</p><h2>Nouvel inventaire</h2></div></div>
+              <form id="inventoryForm" class="stack">
+                <div class="field"><label for="inventoryProduct">Produit</label><select id="inventoryProduct" name="produitId" required></select></div>
+                <div class="field"><label for="inventoryCount">Quantite comptee</label><input id="inventoryCount" name="quantiteComptee" type="number" min="0" step="0.001" required /></div>
+                <div class="field"><label for="inventoryNotes">Notes</label><input id="inventoryNotes" name="notes" /></div>
+                <button class="primary full" type="submit">Valider inventaire</button>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Historique</p><h2>Inventaires</h2></div><button class="ghost" id="refreshInventoriesBtn" type="button">Actualiser</button></div>
+              <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Date</th><th>Produit</th><th>Theorique</th><th>Compte</th><th>Ecart</th></tr></thead><tbody id="inventoriesTable"></tbody></table></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="cashView">
+          <div class="grid two">
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Configuration</p><h2>Caisses</h2></div></div>
+              <form id="cashRegisterForm" class="inline-form"><input name="nom" minlength="2" placeholder="Caisse principale" required /><button class="primary" type="submit">Creer</button></form>
+              <div id="cashRegisterList" class="chip-list"></div>
+              <form id="cashOpenForm" class="stack">
+                <div class="field"><label for="cashOpenRegister">Caisse</label><select id="cashOpenRegister" name="caisseId" required></select></div>
+                <div class="field"><label for="cashOpeningBalance">Fond ouverture</label><input id="cashOpeningBalance" name="fondOuverture" type="number" min="0" step="0.01" value="0" required /></div>
+                <button class="primary full" type="submit">Ouvrir session</button>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Session courante</p><h2 id="cashSessionTitle">Aucune session</h2></div><button class="ghost" id="cashPreviewBtn" type="button">Calculer</button></div>
+              <div class="metrics" id="cashSessionMetrics"><div><span>Attendu</span><strong>0.00</strong></div></div>
+              <form id="cashMovementForm" class="inline-form">
+                <select name="type"><option>ENTREE</option><option>SORTIE</option></select>
+                <input name="montant" type="number" min="0.01" step="0.01" placeholder="Montant" required />
+                <input name="libelle" minlength="2" placeholder="Libelle" required />
+                <button class="primary" type="submit">Mouvement</button>
+              </form>
+              <form id="cashCloseForm" class="inline-form">
+                <input name="montantReel" type="number" min="0" step="0.01" placeholder="Montant reel" required />
+                <button class="primary" type="submit">Fermer session</button>
+              </form>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Historique</p><h2>Sessions de caisse</h2></div><button class="ghost" id="refreshCashSessionsBtn" type="button">Actualiser</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Caisse</th><th>Ouverture</th><th>Attendu</th><th>Reel</th><th>Ecart</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="cashSessionsTable"></tbody></table></div>
+          </section>
+        </section>
+
+        <section class="view" id="reportView">
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Analyse</p><h2>Rapport financier</h2></div><div class="dashboard-filter"><input id="reportDateStart" type="date" /><input id="reportDateEnd" type="date" /><button class="ghost" id="refreshReportBtn" type="button">Generer</button></div></div>
+            <div class="dashboard-kpis" id="reportKpis"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Performance</p><h2>Meilleurs produits</h2></div><button class="ghost" id="printReportBtn" type="button">Imprimer / PDF</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Produit</th><th>Quantite</th><th>Chiffre affaires</th></tr></thead><tbody id="reportProductsTable"></tbody></table></div>
+          </section>
+        </section>
+
+        <section class="toast-log" id="toastLog" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
